@@ -8,16 +8,7 @@ sys.path.insert(1, "..")
 
 from SOAPpy import WSDL
 
-# Check for a web proxy definition in environment
-try:
-   proxy_url=os.environ['http_proxy']
-   phost, pport = re.search('http://([^:]+):([0-9]+)', proxy_url).group(1,2)
-   proxy = "%s:%s" % (phost, pport)
-except:
-   proxy = None
-
-server = WSDL.Proxy('http://www.xmethods.net/sd/2001/BabelFishService.wsdl',
-                    http_proxy=proxy)
+server = WSDL.Proxy('http://www.xmethods.net/sd/2001/BabelFishService.wsdl')
 
 english = "Hi Friend!"
 

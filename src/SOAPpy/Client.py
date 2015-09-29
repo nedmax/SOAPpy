@@ -169,7 +169,7 @@ class HTTPTransport:
             debugHeader(s)
             print "POST %s %s" % (real_path, r._http_vsn_str)
             print "Host:", addr.host
-            print "User-agent: SOAPpy " + __version__ + " (http://pywebsvcs.sf.net)"
+            print "User-agent: SOAPpy " + __version__
             print "Content-type:", t
             print "Content-length:", len(data)
             print 'SOAPAction: "%s"' % soapaction
@@ -279,8 +279,8 @@ class SOAPProxy:
     def __init__(self, proxy, namespace = None, soapaction = None,
                  header = None, methodattrs = None, transport = HTTPTransport,
                  encoding = 'UTF-8', throw_faults = 1, unwrap_results = None,
-                 http_proxy=None, config = Config, noroot = 0,
-                 simplify_objects=None, timeout=None):
+                 config = Config, noroot = 0, simplify_objects=None,
+                 timeout=None):
 
         # Test the encoding, raising an exception if it's not known
         if encoding != None:
@@ -306,7 +306,6 @@ class SOAPProxy:
         self.transport      = transport()
         self.encoding       = encoding
         self.throw_faults   = throw_faults
-        self.http_proxy     = http_proxy
         self.config         = config
         self.noroot         = noroot
         self.timeout        = timeout
@@ -359,7 +358,6 @@ class SOAPProxy:
         try:
             r, self.namespace = self.transport.call(self.proxy, m, ns, sa,
                                                     encoding = self.encoding,
-                                                    http_proxy = self.http_proxy,
                                                     config = self.config,
                                                     timeout = self.timeout)
 
@@ -393,7 +391,6 @@ class SOAPProxy:
             try:
                 r, self.namespace = self.transport.call(self.proxy, m, ns, sa,
                                                         encoding = self.encoding,
-                                                        http_proxy = self.http_proxy,
                                                         config = self.config,
                                                         timeout = self.timeout)
             except socket.timeout:

@@ -6,14 +6,6 @@ import sys, os, time, signal, re
 sys.path.insert(1, "..")
 from SOAPpy import SOAPProxy, SOAPConfig, SOAPUserAgent
 
-# Check for a web proxy definition in environment
-try:
-   proxy_url=os.environ['http_proxy']
-   phost, pport = re.search('http://([^:]+):([0-9]+)', proxy_url).group(1,2)
-   http_proxy = "%s:%s" % (phost, pport)
-except:
-   http_proxy = None
-
 
 PROXY="http://www.soapware.org/xmlStorageSystem"
 EMAIL="SOAPpy@actzero.com"
@@ -35,12 +27,9 @@ def printstatus (cmd, stat):
         print "### %s successful: %s ###" % (cmd, stat.message)
     return not stat.flError
 
-server = SOAPProxy(encoding="US-ASCII", 
+server = SOAPProxy(encoding="US-ASCII",
                    proxy=PROXY,
-                   soapaction="/xmlStorageSystem",
-                   http_proxy=http_proxy,
-#                   config=SOAPConfig(debug=1)
-                   )
+                   soapaction="/xmlStorageSystem")
 
 # Register as a new user or update user information
 reg = server.registerUser(email=EMAIL, name=NAME, password=PASSWORD,
@@ -58,11 +47,11 @@ if printstatus("getServerCapabilities", reg):
     print "URL of the folder containing your files: " + str(reg.yourUpstreamFolderUrl)
 
 # Store some files
-reg = server.saveMultipleFiles (email=EMAIL, password=PASSWORD, 
-	relativepathList=['index.html','again.html'], 
-	fileTextList=['<html><title>bennett@actzero.com home page</title><body>' + 
+reg = server.saveMultipleFiles (email=EMAIL, password=PASSWORD,
+	relativepathList=['index.html','again.html'],
+	fileTextList=['<html><title>bennett@actzero.com home page</title><body>' +
 			'<a href=again.html>Hello Earth</a></body></html>',
-			'<html><title>bennett@actzero.com home page</title><body>' + 
+			'<html><title>bennett@actzero.com home page</title><body>' +
 			'<a href=index.html>Hello Earth Again</a></body></html>'])
 if printstatus("saveMultipleFiles", reg):
     print "Files stored:"
@@ -114,9 +103,9 @@ else:
     # I am a parent process
     # Change some files
     time.sleep(3)
-    reg = server.saveMultipleFiles (email=EMAIL, password=PASSWORD, 
-		relativepathList=['index.html'], 
-		fileTextList=['<html><title>bennett@actzero.com home page</title><body>' + 
+    reg = server.saveMultipleFiles (email=EMAIL, password=PASSWORD,
+		relativepathList=['index.html'],
+		fileTextList=['<html><title>bennett@actzero.com home page</title><body>' +
 			'<a href=again.html>Hello Bennett</a></body></html>'])
     if printstatus("saveMultipleFiles", reg):
     	print "Files stored:"

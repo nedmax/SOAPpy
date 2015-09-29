@@ -1,9 +1,10 @@
 # CHANGELOG
 
-0.12.23 (unreleased)
+0.12.24
 --------------------
 
-- Nothing changed yet.
+- Removed httpg support
+- Added proxy support through environment variables
 
 
 0.12.22 (2014-06-20)
