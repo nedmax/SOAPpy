@@ -8,6 +8,7 @@ from version import __version__
 import urllib
 from types import *
 import re
+import os
 import base64
 import socket, httplib
 from httplib import HTTPConnection, HTTP
@@ -69,42 +70,6 @@ class SOAPAddress:
 
     __repr__ = __str__
 
-class SOAPTimeoutError(socket.timeout):
-    '''This exception is raised when a timeout occurs in SOAP operations'''
-    pass
-
-class HTTPConnectionWithTimeout(HTTPConnection):
-    '''Extend HTTPConnection for timeout support'''
-
-    def __init__(self, host, port=None, strict=None, timeout=None):
-        HTTPConnection.__init__(self, host, port, strict)
-        self._timeout = timeout
-
-    def connect(self):
-        HTTPConnection.connect(self)
-        if self.sock and self._timeout:
-            self.sock.settimeout(self._timeout)
-
-
-class HTTPWithTimeout(HTTP):
-
-    _connection_class = HTTPConnectionWithTimeout
-
-    def __init__(self, host='', port=None, strict=None, timeout=None):
-        """Slight modification of superclass (httplib.HTTP) constructor.
-
-        The only change is that arg ``timeout`` is also passed in the
-        initialization of :attr:`_connection_class`.
-
-        :param timeout: for the socket connection (seconds); None to disable
-        :type timeout: float or None
-
-        """
-        if port == 0:
-            port = None
-
-        self._setup(self._connection_class(host, port, strict, timeout))
-
 class HTTPTransport:
 
 
@@ -148,17 +113,33 @@ class HTTPTransport:
             addr = SOAPAddress(addr, config)
 
         # Build a request
-        if os.environ.get('HTTP_PROXY'):
-            real_addr = http_proxy
-            real_path = addr.proto + "://" + addr.host + addr.path
-        else:
-            real_addr = addr.host
-            real_path = addr.path
+        http_proxy = os.environ.get('HTTP_PROXY', None)
+        https_proxy = os.environ.get('HTTPS_PROXY', None)
+        real_addr = addr.proto + "://" + addr.host
+        real_path = real_addr + addr.path
 
         if addr.proto == 'https':
-            r = httplib.HTTPS(real_addr, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
+            if https_proxy:
+                prxy = SOAPAddress(https_proxy, config)
+                if prxy.proto == 'https':
+                    r = httplib.HTTPSConnection(https_proxy, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
+                    r.set_tunnel(real_path)
+                else:
+                    r = httplib.HTTPConnection(https_proxy, timeout=timeout)
+                    r.set_tunnel(real_path)
+            else:
+                r = httplib.HTTPSConnection(real_addr, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
         else:
-            r = HTTPWithTimeout(real_addr, timeout=timeout)
+            if http_proxy:
+                prxy = SOAPAddress(http_proxy, config)
+                if prxy.proto == 'https':
+                    r = httplib.HTTPSConnection(http_proxy, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
+                    r.set_tunnel(real_path)
+                else:
+                    r = httplib.HTTPConnection(http_proxy, timeout=timeout)
+                    r.set_tunnel(real_path)
+            else:
+                r = httplib.HTTPConnection(real_addr, timeout=timeout)
 
         r.putrequest("POST", real_path)
 
