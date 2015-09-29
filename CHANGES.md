@@ -1,5 +1,4 @@
-CHANGELOG
-=====================
+# CHANGELOG
 
 0.12.23 (unreleased)
 --------------------
@@ -672,5 +671,3 @@ VERSION 0.5 (4/17/01)
 -----------------------
 
 - Initial public release
-
-

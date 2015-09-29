@@ -8,11 +8,11 @@ Source:        SOAPpy-%{version}.tgz
 Requires:      python >= 2.2
 BuildArch:     noarch
 AutoReq:       no
-Packager:      Antonio Beamud Montero <antonio.beamud@wanadoo.es>
+Packager:      Nedimar Paulo Turatti <npturatti@gmail.com>
 
 %description
 SOAP implementation by Cayce Ullman and Brian Matthews.
-%prep 
+%prep
 %setup SOAPpy-%{version}
 
 %build
