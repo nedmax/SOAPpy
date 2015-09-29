@@ -1,52 +1,10 @@
-"""
-################################################################################
-#
-# SOAPpy - Cayce Ullman       (cayce@actzero.com)
-#          Brian Matthews     (blm@actzero.com)
-#          Gregory Warnes     (Gregory.R.Warnes@Pfizer.com)
-#          Christopher Blunck (blunck@gst.com)
-#
-################################################################################
-# Copyright (c) 2003, Pfizer
-# Copyright (c) 2001, Cayce Ullman.
-# Copyright (c) 2001, Brian Matthews.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# Neither the name of actzero, inc. nor the names of its contributors may
-# be used to endorse or promote products derived from this software without
-# specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-################################################################################
 
-"""
 from __future__ import nested_scopes
 
 ident = '$Id: Client.py 1496 2010-03-04 23:46:17Z pooryorick $'
 
 from version import __version__
 
-#import xml.sax
 import urllib
 from types import *
 import re
@@ -95,11 +53,8 @@ class SOAPAddress:
         if not path:
             path = '/'
 
-        if proto not in ('http', 'https', 'httpg'):
+        if proto not in ('http', 'https'):
             raise IOError, "unsupported SOAP protocol"
-        if proto == 'httpg' and not config.GSIclient:
-            raise AttributeError, \
-                  "GSI client not supported by this Python installation"
         if proto == 'https' and not config.SSLclient:
             raise AttributeError, \
                 "SSL client not supported by this Python installation"
@@ -128,7 +83,7 @@ class HTTPConnectionWithTimeout(HTTPConnection):
     def connect(self):
         HTTPConnection.connect(self)
         if self.sock and self._timeout:
-            self.sock.settimeout(self._timeout) 
+            self.sock.settimeout(self._timeout)
 
 
 class HTTPWithTimeout(HTTP):
@@ -151,7 +106,7 @@ class HTTPWithTimeout(HTTP):
         self._setup(self._connection_class(host, port, strict, timeout))
 
 class HTTPTransport:
-            
+
 
     def __init__(self):
         self.cookies = Cookie.SimpleCookie();
@@ -169,7 +124,7 @@ class HTTPTransport:
                 return original_namespace
         else:
             return original_namespace
-    
+
     def __addcookies(self, r):
         '''Add cookies from self.cookies to request r
         '''
@@ -186,25 +141,21 @@ class HTTPTransport:
             if value:
                 attrs.append('$Domain=%s' % value)
             r.putheader('Cookie', "; ".join(attrs))
-    
-    def call(self, addr, data, namespace, soapaction = None, encoding = None,
-        http_proxy = None, config = Config, timeout=None):
+
+    def call(self, addr, data, namespace, soapaction = None, encoding = None, config = Config, timeout=None):
 
         if not isinstance(addr, SOAPAddress):
             addr = SOAPAddress(addr, config)
 
         # Build a request
-        if http_proxy:
+        if os.environ.get('HTTP_PROXY'):
             real_addr = http_proxy
             real_path = addr.proto + "://" + addr.host + addr.path
         else:
             real_addr = addr.host
             real_path = addr.path
 
-        if addr.proto == 'httpg':
-            from pyGlobus.io import GSIHTTP
-            r = GSIHTTP(real_addr, tcpAttr = config.tcpAttr)
-        elif addr.proto == 'https':
+        if addr.proto == 'https':
             r = httplib.HTTPS(real_addr, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
         else:
             r = HTTPWithTimeout(real_addr, timeout=timeout)
@@ -219,7 +170,7 @@ class HTTPTransport:
         r.putheader("Content-type", t)
         r.putheader("Content-length", str(len(data)))
         self.__addcookies(r);
-        
+
         # if user is not a user:passwd format
         #    we'll receive a failure from the server. . .I guess (??)
         if addr.user != None:
@@ -282,7 +233,7 @@ class HTTPTransport:
             message_len = int(content_length)
         except:
             message_len = -1
-            
+
         f = r.getfile()
         if f is None:
             raise HTTPError(code, "Empty response from server\nCode: %s\nHeaders: %s" % (msg, headers))
@@ -301,7 +252,7 @@ class HTTPTransport:
             print "headers=", headers
             print "content-type=", content_type
             print "data=", data
-                
+
         if config.dumpHeadersIn:
             s = 'Incoming HTTP headers'
             debugHeader(s)
@@ -314,7 +265,7 @@ class HTTPTransport:
 
         def startswith(string, val):
             return string[0:len(val)] == val
-        
+
         if code == 500 and not \
                ( startswith(content_type, "text/xml") and message_len > 0 ):
             raise HTTPError(code, msg)
@@ -336,7 +287,7 @@ class HTTPTransport:
             new_ns = None
         else:
             new_ns = self.getNS(namespace, data)
-        
+
         # return response payload
         return data, new_ns
 
@@ -385,10 +336,10 @@ class SOAPProxy:
             self.channel_mode = config.channel_mode
             self.delegation_mode = config.delegation_mode
         #end GSI Additions
-        
+
     def invoke(self, method, args):
         return self.__call(method, args, {})
-        
+
     def __call(self, name, args, kw, ns = None, sa = None, hd = None,
         ma = None):
 
@@ -403,7 +354,7 @@ class SOAPProxy:
                 sa = self.soapaction
             else:
                 sa = name
-                
+
         if hd: # Get header
             if type(hd) == TupleType:
                 hd = hd[0]
@@ -440,7 +391,7 @@ class SOAPProxy:
             #
             # See if we have a fault handling vector installed in our
             # config. If we do, invoke it. If it returns a true value,
-            # retry the call. 
+            # retry the call.
             #
             # In any circumstance other than the fault handler returning
             # true, reraise the exception. This keeps the semantics of this
@@ -466,7 +417,7 @@ class SOAPProxy:
                                                         timeout = self.timeout)
             except socket.timeout:
                 raise SOAPTimeoutError
-            
+
 
         p, attrs = parseSOAPRPC(r, attrs = 1)
 
@@ -494,7 +445,7 @@ class SOAPProxy:
                         count += 1
                         t = getattr(p, i)
                 if count == 1: # Only one piece of data, bubble it up
-                    p = t 
+                    p = t
             except:
                 pass
 
@@ -545,7 +496,7 @@ class SOAPProxy:
                     return self.__f_call(*args, **kw)
             else:
                 return self.__r_call(*args, **kw)
-                        
+
         def __getattr__(self, name):
             if name == '__del__':
                 raise AttributeError, name

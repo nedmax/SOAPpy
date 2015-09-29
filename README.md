@@ -45,7 +45,7 @@ interaction between clients and servers.
     python setup.py install
 
 
-## DOCUMENTATION
+## Simple usage
 
 A simple "Hello World" http SOAP server::
 
@@ -63,7 +63,6 @@ And the corresponding client:
     print server.hello()
 
 
-Support
-============
-Github: https://github.com/nedmax/SOAPpy
-Issues: https://github.com/nedmax/SOAPpy/issues
+## Support
+* Github: https://github.com/nedmax/SOAPpy
+* Issues: https://github.com/nedmax/SOAPpy/issues
