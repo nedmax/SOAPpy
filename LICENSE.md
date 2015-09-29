@@ -1,34 +1,29 @@
-==============================================
-SOAPpy - Simple to use SOAP library for Python 
-==============================================
+# SOAPpy
+  Simple to use SOAP library for Python
 
-Current Maintainers: 	
+## Current Maintainers: 	
 
-	Gregory R. Warnes <Gregory.R.Warnes@Pfizer.com>
-	Christopher Blunck <blunck2@gst.com>
+* Gregory R. Warnes <Gregory.R.Warnes@Pfizer.com>
+* Christopher Blunck <blunck2@gst.com>
 
-Original Authors: 
+## Original Authors:
 
-	Cayce Ullman <c_ullman@yahoo.com>
-        Brian Matthews <blm@blmatthews.com>
+* Cayce Ullman <c_ullman@yahoo.com>
+* Brian Matthews <blm@blmatthews.com>
 
-Contributions by:
+## Contributions by:
 
-	Brad Knotwell <b.knotwell@f5.com>
-	Mark Bucciarelli <mark@hubcapconsulting.com> (ported WSDL
-             client from ZSI)
-	Ivan R. Judson 	<judson@mcs.anl.gov> (Globus support)
-	Kirk Strauser <kirk@daycos.com>
-	Antonio Beamud Montero <antonio.beamud@linkend.com> (patches
-  	     for integrating SOAPpy into Zope)
+* Brad Knotwell <b.knotwell@f5.com>
+* Mark Bucciarelli <mark@hubcapconsulting.com> (ported WSDL client from ZSI)
+* Ivan R. Judson 	<judson@mcs.anl.gov> (Globus support)
+* Kirk Strauser <kirk@daycos.com>
 
-Copyright (c) 2002-2003, Pfizer, Inc.
-Copyright (c) 2001, Cayce Ullman.
-Copyright (c) 2001, Brian Matthews.
-All rights reserved.
+- Copyright (c) 2002-2003, Pfizer, Inc.
+- Copyright (c) 2001, Cayce Ullman.
+- Copyright (c) 2001, Brian Matthews.
+- All rights reserved.
 
-LICENSE:
-----------------------------------------------------------------------------
+# LICENSE:
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
@@ -53,4 +48,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
-
