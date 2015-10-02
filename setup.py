@@ -9,7 +9,7 @@ def read(*rnames):
     return "\n"+ open(
         os.path.join('.', *rnames)
     ).read()
-url="https://github.com/kiorky/SOAPpy.git"
+url="https://github.com/nedmax/SOAPpy.git"
 long_description="SOAPpy provides tools for building SOAP clients and servers.  For more information see " + url\
     +'\n'+read('README.md')\
     +'\n'+read('CHANGES.md')
@@ -27,5 +27,6 @@ setup(
     install_requires=[
         'wstools',
         'defusedxml',
+        'requests'
     ]
 )

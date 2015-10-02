@@ -7,7 +7,6 @@ import requests
 from types import *
 import re, os, base64
 import base64
-import Cookie
 
 # SOAPpy modules
 from Errors      import *
@@ -67,9 +66,8 @@ class SOAPAddress:
 
 class HTTPTransport:
 
-
     def __init__(self):
-        self.cookies = Cookie.SimpleCookie();
+        self.cookies = requests.cookies.RequestsCookieJar()
 
     def getNS(self, original_namespace, data):
         """Extract the (possibly extended) namespace from the returned
@@ -85,20 +83,21 @@ class HTTPTransport:
         else:
             return original_namespace
 
-    def call(self, addr, data, namespace, soapaction = None, encoding = None, config = Config, timeout=None):
+    def call(self, addr, data, namespace, soapaction = None, encoding = 'utf-8', config = Config, timeout=None):
 
         if not isinstance(addr, SOAPAddress):
             addr = SOAPAddress(addr, config)
 
         real_addr = addr.proto + "://" + addr.host
         real_path = real_addr + addr.path
+        username, password = addr.user.split(':')
 
         if addr.proto == 'https':
             cert = (config.SSL.cert_file, config.SSL.key_file)
 
+        t = 'text/xml'
         if encoding != None:
             t += '; charset=%s' % encoding
-        r.putheader("Content-type", t)
 
         headers = {
             'User-Agent': SOAPUserAgent(),
@@ -106,35 +105,14 @@ class HTTPTransport:
             'SOAPAction': soapaction
         }
 
-        r = requests.post(real_path, headers=headers, cert=cert)
-
-
-        # read response line
-        response = r.getresponse()
-        code = r.status_code
-        msg = r.status
-        headers = r.headers
-
-        self.cookies = r.cookies
-
-        if headers:
-            content_type = headers.get("Content-Type", "text/xml")
-            content_length = headers.get("Content-Length")
-        else:
-            content_type = None
-            content_length = None
-
-        data = r.text
-        if data is None:
-            raise HTTPError(code, "Empty response from server\nCode: %s\nHeaders: %s" % (msg, headers))
-
-        message_len = len(data)
-
-        if code == 500 and not ( startswith(content_type, "text/xml") and message_len > 0 ):
-            raise HTTPError(code, msg)
-
-        if code not in (200, 500):
-            raise HTTPError(code, msg)
+        try:
+            r = requests.post(real_path, headers=headers, data=data, cert=cert, timeout=timeout, auth=(username, password))
+            self.cookies = r.cookies
+            data = r.text
+            print data
+        except Exception:
+            print r.raw
+            raise HTTPError(r.status_code, r.reason)
 
         # get the new namespace
         if namespace is None:
@@ -233,10 +211,6 @@ class SOAPProxy:
                                                     encoding = self.encoding,
                                                     config = self.config,
                                                     timeout = self.timeout)
-
-        except socket.timeout:
-            raise SOAPTimeoutError
-
         except Exception, ex:
             #
             # Call failed.
@@ -273,8 +247,7 @@ class SOAPProxy:
         p, attrs = parseSOAPRPC(r, attrs = 1)
 
         try:
-            throw_struct = self.throw_faults and \
-                isinstance (p, faultType)
+            throw_struct = self.throw_faults and isinstance (p, faultType)
         except:
             throw_struct = 0
 

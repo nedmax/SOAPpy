@@ -1,6 +1,6 @@
 Summary:       SOAPpy
 Name:          SOAPpy
-Version:       0.9.7
+Version:       0.12.24
 Release:       2
 License:       Copyright (c) 2001, Cayce Ullman.
 Group:         Productivity/Networking/Web/Applications
