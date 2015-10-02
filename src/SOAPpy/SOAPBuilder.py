@@ -1,39 +1,3 @@
-"""
-################################################################################
-# Copyright (c) 2003, Pfizer
-# Copyright (c) 2001, Cayce Ullman.
-# Copyright (c) 2001, Brian Matthews.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# Neither the name of actzero, inc. nor the names of its contributors may
-# be used to endorse or promote products derived from this software without
-# specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-################################################################################
-"""
-
-ident = '$Id: SOAPBuilder.py 1498 2010-03-12 02:13:19Z pooryorick $'
 from version import __version__
 
 import cgi
@@ -146,11 +110,11 @@ class SOAPBuilder:
 
             if hasattr(self.config, "argsOrdering") and self.config.argsOrdering.has_key(self.method):
                 for k in self.config.argsOrdering.get(self.method):
-                    self.dump(self.kw.get(k), k, typed = typed, ns_map = ns_map)                
+                    self.dump(self.kw.get(k), k, typed = typed, ns_map = ns_map)
             else:
                 for (k, v) in self.kw.items():
                     self.dump(v, k, typed = typed, ns_map = ns_map)
-                
+
         except RecursionError:
             if self.use_refs == 0:
                 # restart
@@ -347,7 +311,7 @@ class SOAPBuilder:
 
     def dump_int(self, obj, tag, typed = 1, ns_map = {}):
         if self.config.debug: print "In dump_int."
-        
+
         # fix error "Bad types (class java.math.BigInteger -> class java.lang.Integer)"
         if isinstance(obj, LongType):
             obj_type = "integer"
@@ -361,7 +325,7 @@ class SOAPBuilder:
         if self.config.debug: print "In dump_bool."
         self.out.append(self.dumper(None, 'boolean', obj, tag, typed,
                                      ns_map, self.genroot(ns_map)))
-        
+
     def dump_string(self, obj, tag, typed = 0, ns_map = {}):
         if self.config.debug: print "In dump_string."
         tag = tag or self.gentag()
@@ -454,7 +418,7 @@ class SOAPBuilder:
                     typename = "SOAPStruct"
 
                 t = ns + typename
-                                
+
             elif isinstance(sample, anyType):
                 ns = sample._validNamespaceURI(self.config.typesNamespaceURI,
                                                self.config.strictNamespaces)
@@ -471,9 +435,9 @@ class SOAPBuilder:
 
                 # HACK: unicode is a SOAP string
                 if type(sample) == UnicodeType: typename = 'string'
-                
+
                 # HACK: python 'float' is actually a SOAP 'double'.
-                if typename=="float": typename="double"  
+                if typename=="float": typename="double"
                 t = self.genns(
                 ns_map, self.config.typesNamespaceURI)[0] + typename
 
@@ -498,12 +462,12 @@ class SOAPBuilder:
             except: elemsname = "item"
         else:
             elemsname = tag
-            
+
         if isinstance(data, (list, tuple, arrayType)):
             should_drill = True
         else:
             should_drill = not same_type
-        
+
         for i in data:
             self.dump(i, elemsname, should_drill, ns_map)
 
@@ -543,12 +507,12 @@ class SOAPBuilder:
             except: elemsname = "item"
         else:
             elemsname = tag
-            
+
         if isinstance(data, (list, tuple, arrayType)):
             should_drill = True
         else:
             should_drill = not same_type
-        
+
         for i in data:
             self.dump(i, elemsname, should_drill, ns_map)
 
@@ -577,7 +541,7 @@ class SOAPBuilder:
         try: a = obj._marshalAttrs(ns_map, self)
         except: a = ''
 
-        self.out.append('<%s%s%s%s>\n' % 
+        self.out.append('<%s%s%s%s>\n' %
                         (tag, id, a, self.genroot(ns_map)))
 
         for (k, v) in obj.items():

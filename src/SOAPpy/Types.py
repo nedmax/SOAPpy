@@ -1,41 +1,4 @@
-"""
-################################################################################
-# Copyright (c) 2003, Pfizer
-# Copyright (c) 2001, Cayce Ullman.
-# Copyright (c) 2001, Brian Matthews.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# Neither the name of actzero, inc. nor the names of its contributors may
-# be used to endorse or promote products derived from this software without
-# specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-################################################################################
-
-"""
 from __future__ import nested_scopes
-
-ident = '$Id: Types.py 1496 2010-03-04 23:46:17Z pooryorick $'
 from version import __version__
 
 import UserList
@@ -80,7 +43,7 @@ class anyType:
         else:
             self._ns = self._validURIs[0]
             self._name = name
-            
+
         self._typed = typed
         self._attrs = {}
 
@@ -146,7 +109,7 @@ class anyType:
             value = unicode(value)
 
         self._attrs[attr] = value
-            
+
 
     def _setAttrs(self, attrs):
         if type(attrs) in (ListType, TupleType):
@@ -1284,7 +1247,7 @@ class compoundType(anyType):
                         retval[name] = getattr(self,name)
             return retval
 
- 
+
     def __getitem__(self, item):
         if type(item) == IntType:
             return self.__dict__[self._keyord[item]]
@@ -1309,7 +1272,7 @@ class compoundType(anyType):
         else:
             self.__dict__[name] = value
             self._keyord.append(name)
-            
+
     def _placeItem(self, name, value, pos, subpos = 0, attrs = None):
 
         if subpos == 0 and type(self.__dict__[name]) != ListType:
@@ -1317,14 +1280,14 @@ class compoundType(anyType):
         else:
             self.__dict__[name][subpos] = value
 
-        # only add to key order list if it does not already 
+        # only add to key order list if it does not already
         # exist in list
         if not (name in self._keyord):
             if pos < len(x):
                 self._keyord[pos] = name
             else:
                 self._keyord.append(name)
-              
+
 
     def _getItemAsList(self, name, default = []):
         try:
@@ -1436,10 +1399,10 @@ class arrayType(UserList.UserList, compoundType):
         else:
             retval = {}
             def fun(x): retval[str(x).encode(encoding)] = self.data[x]
-            
+
             map( fun, range(len(self.data)) )
             return retval
- 
+
     def __getitem__(self, item):
         try:
             return self.data[int(item)]
@@ -1571,7 +1534,7 @@ class mapType(arrayType):
 
     def __init__(self, data = None, name = None, attrs = None,
         offset = 0, rank = None, asize = 0, elemsname = None):
-        
+
         arrayType.__init__(self, data, name, attrs, offset, rank, asize,
             elemsname)
         self._keyord=['key','value']
@@ -1614,7 +1577,7 @@ class faultType(structType, Error):
     __str__ = __repr__
 
     def __call__(self):
-        return (self.faultcode, self.faultstring, self.detail)        
+        return (self.faultcode, self.faultstring, self.detail)
 
 class SOAPException(Exception):
     def __init__(self, code="", string="", detail=None):
@@ -1655,7 +1618,7 @@ class MethodFailed(Exception):
 
     def __str__(self):
         return repr(self.value)
-        
+
 #######
 # Convert complex SOAPpy objects to native python equivalents
 #######
@@ -1667,16 +1630,16 @@ def simplify(object, level=0):
     This function recursively converts the passed 'container' object,
     and all public subobjects. (Private subobjects have names that
     start with '_'.)
-    
+
     Conversions:
     - faultType    --> raise python exception
     - arrayType    --> array
     - compoundType --> dictionary
     """
-    
+
     if level > 10:
         return object
-    
+
     if isinstance( object, faultType ):
         if object.faultstring == "Required Header Misunderstood":
             raise RequiredHeaderMismatch(object.detail)
@@ -1720,13 +1683,13 @@ def simplify_contents(object, level=0):
 
     This function recursively converts the sub-objects contained in a
     'container' object to simple python types.
-    
+
     Conversions:
     - faultType    --> raise python exception
     - arrayType    --> array
     - compoundType --> dictionary
     """
-    
+
     if level>10: return object
 
     if isinstance( object, faultType ):
@@ -1734,7 +1697,7 @@ def simplify_contents(object, level=0):
             if isPublic(k):
                 setattr(object, k, simplify(object[k], level=level+1))
         raise object
-    elif isinstance( object, arrayType ): 
+    elif isinstance( object, arrayType ):
         data = object._aslist()
         for k in range(len(data)):
             object[k] = simplify(data[k], level=level+1)
@@ -1755,7 +1718,5 @@ def simplify_contents(object, level=0):
     elif type(object)==list:
         for k in range(len(object)):
             object[k] = simplify(object[k])
-    
+
     return object
-
-

@@ -1,8 +1,5 @@
-"""Parse web services description language to get SOAP methods.
+# Parse web services description language to get SOAP methods. Rudimentary support.
 
-Rudimentary support."""
-
-ident = '$Id: WSDL.py 1467 2008-05-16 23:32:51Z warnes $'
 from version import __version__
 
 import wstools
@@ -14,7 +11,7 @@ import urllib
 
 class Proxy:
     """WSDL Proxy.
-    
+
     SOAPProxy wrapper that parses method names, namespaces, soap actions from
     the web service description language (WSDL) file passed into the
     constructor.  The WSDL reference can be passed in as a stream, an url, a
@@ -24,7 +21,7 @@ class Proxy:
     of WSDLTools.SOAPCallinfo.
 
     For example,
-    
+
         url = 'http://www.xmethods.org/sd/2001/TemperatureService.wsdl'
         wsdl = WSDL.Proxy(url)
         print len(wsdl.methods)          # 1
@@ -49,7 +46,7 @@ class Proxy:
                 buf = newstream.readlines()
                 raise Error, "Unable to parse WSDL file at %s: \n\t%s" % \
                       (wsdlsource, "\t".join(buf))
-                
+
 
         # NOT TESTED (as of April 17, 2003)
         #if self.wsdl is None and wsdlsource == '-':
@@ -58,7 +55,7 @@ class Proxy:
         #    print 'stdin'
 
         if self.wsdl is None:
-            try: 
+            try:
                 file(wsdlsource)
                 self.wsdl = reader.loadFromFile(wsdlsource)
                 #print 'file'
@@ -68,7 +65,7 @@ class Proxy:
                 buf = newstream.readlines()
                 raise Error, "Unable to parse WSDL file at %s: \n\t%s" % \
                       (wsdlsource, "\t".join(buf))
-            
+
         if self.wsdl is None:
             try:
                 stream = urllib.URLopener(key_file=config.SSL.key_file, cert_file=config.SSL.cert_file).open(wsdlsource)
@@ -79,7 +76,7 @@ class Proxy:
                 buf = newstream.readlines()
                 raise Error, "Unable to parse WSDL file at %s: \n\t%s" % \
                       (wsdlsource, "\t".join(buf))
-            
+
         if self.wsdl is None:
             import StringIO
             self.wsdl = reader.loadFromString(str(wsdlsource))
@@ -100,7 +97,7 @@ class Proxy:
         self.soapproxy = SOAPProxy('http://localhost/dummy.webservice',
                                    config=config, **kw)
 
-    def __str__(self): 
+    def __str__(self):
         s = ''
         for method in self.methods.values():
             s += str(method)
@@ -134,4 +131,3 @@ class Proxy:
                 details = outps[parm]
                 print "   Out #%d: %s  (%s)" % (parm, details.name, details.type)
             print
-

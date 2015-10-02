@@ -19,8 +19,6 @@ except: pass
 from defusedxml import expatreader
 from defusedxml.common import DefusedXmlException
 
-
-ident = '$Id: Parser.py 1497 2010-03-08 06:06:52Z pooryorick $'
 from version import __version__
 
 
