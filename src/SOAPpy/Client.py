@@ -1,17 +1,12 @@
 
 from __future__ import nested_scopes
-
-ident = '$Id: Client.py 1496 2010-03-04 23:46:17Z pooryorick $'
-
 from version import __version__
 
 import urllib
+import requests
 from types import *
-import re
-import os
+import re, os, base64
 import base64
-import socket, httplib
-from httplib import HTTPConnection, HTTP
 import Cookie
 
 # SOAPpy modules
@@ -28,7 +23,7 @@ from Types       import faultType, simplify
 
 
 def SOAPUserAgent():
-    return "SOAPpy " + __version__ + " (pywebsvcs.sf.net)"
+    return "SOAPpy " + __version__
 
 
 class SOAPAddress:
@@ -90,178 +85,56 @@ class HTTPTransport:
         else:
             return original_namespace
 
-    def __addcookies(self, r):
-        '''Add cookies from self.cookies to request r
-        '''
-        for cname, morsel in self.cookies.items():
-            attrs = []
-            value = morsel.get('version', '')
-            if value != '' and value != '0':
-                attrs.append('$Version=%s' % value)
-            attrs.append('%s=%s' % (cname, morsel.coded_value))
-            value = morsel.get('path')
-            if value:
-                attrs.append('$Path=%s' % value)
-            value = morsel.get('domain')
-            if value:
-                attrs.append('$Domain=%s' % value)
-            r.putheader('Cookie', "; ".join(attrs))
-
     def call(self, addr, data, namespace, soapaction = None, encoding = None, config = Config, timeout=None):
 
         if not isinstance(addr, SOAPAddress):
             addr = SOAPAddress(addr, config)
 
-        # Build a request
-        http_proxy = os.environ.get('HTTP_PROXY', None)
-        https_proxy = os.environ.get('HTTPS_PROXY', None)
         real_addr = addr.proto + "://" + addr.host
         real_path = real_addr + addr.path
 
         if addr.proto == 'https':
-            if https_proxy:
-                prxy = SOAPAddress(https_proxy, config)
-                if prxy.proto == 'https':
-                    r = httplib.HTTPSConnection(https_proxy, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
-                    r.set_tunnel(real_path)
-                else:
-                    r = httplib.HTTPConnection(https_proxy, timeout=timeout)
-                    r.set_tunnel(real_path)
-            else:
-                r = httplib.HTTPSConnection(real_addr, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
-        else:
-            if http_proxy:
-                prxy = SOAPAddress(http_proxy, config)
-                if prxy.proto == 'https':
-                    r = httplib.HTTPSConnection(http_proxy, key_file=config.SSL.key_file, cert_file=config.SSL.cert_file)
-                    r.set_tunnel(real_path)
-                else:
-                    r = httplib.HTTPConnection(http_proxy, timeout=timeout)
-                    r.set_tunnel(real_path)
-            else:
-                r = httplib.HTTPConnection(real_addr, timeout=timeout)
+            cert = (config.SSL.cert_file, config.SSL.key_file)
 
-        r.putrequest("POST", real_path)
-
-        r.putheader("Host", addr.host)
-        r.putheader("User-agent", SOAPUserAgent())
-        t = 'text/xml';
         if encoding != None:
             t += '; charset=%s' % encoding
         r.putheader("Content-type", t)
-        r.putheader("Content-length", str(len(data)))
-        self.__addcookies(r);
 
-        # if user is not a user:passwd format
-        #    we'll receive a failure from the server. . .I guess (??)
-        if addr.user != None:
-            val = base64.encodestring(urllib.unquote_plus(addr.user))
-            r.putheader('Authorization','Basic ' + val.replace('\012',''))
+        headers = {
+            'User-Agent': SOAPUserAgent(),
+            'Content-type': t,
+            'SOAPAction': soapaction
+        }
 
-        # This fixes sending either "" or "None"
-        if soapaction == None or len(soapaction) == 0:
-            r.putheader("SOAPAction", "")
-        else:
-            r.putheader("SOAPAction", '"%s"' % soapaction)
+        r = requests.post(real_path, headers=headers, cert=cert)
 
-        if config.dumpHeadersOut:
-            s = 'Outgoing HTTP headers'
-            debugHeader(s)
-            print "POST %s %s" % (real_path, r._http_vsn_str)
-            print "Host:", addr.host
-            print "User-agent: SOAPpy " + __version__
-            print "Content-type:", t
-            print "Content-length:", len(data)
-            print 'SOAPAction: "%s"' % soapaction
-            debugFooter(s)
-
-        r.endheaders()
-
-        if config.dumpSOAPOut:
-            s = 'Outgoing SOAP'
-            debugHeader(s)
-            print data,
-            if data[-1] != '\n':
-                print
-            debugFooter(s)
-
-        # send the payload
-        r.send(data)
 
         # read response line
-        code, msg, headers = r.getreply()
+        response = r.getresponse()
+        code = r.status_code
+        msg = r.status
+        headers = r.headers
 
-        self.cookies = Cookie.SimpleCookie();
+        self.cookies = r.cookies
+
         if headers:
-            content_type = headers.get("content-type","text/xml")
-            content_length = headers.get("Content-length")
-
-            for cookie in headers.getallmatchingheaders("Set-Cookie"):
-                self.cookies.load(cookie);
-
+            content_type = headers.get("Content-Type", "text/xml")
+            content_length = headers.get("Content-Length")
         else:
-            content_type=None
-            content_length=None
+            content_type = None
+            content_length = None
 
-        # work around OC4J bug which does '<len>, <len>' for some reaason
-        if content_length:
-            comma=content_length.find(',')
-            if comma>0:
-                content_length = content_length[:comma]
-
-        # attempt to extract integer message size
-        try:
-            message_len = int(content_length)
-        except:
-            message_len = -1
-
-        f = r.getfile()
-        if f is None:
+        data = r.text
+        if data is None:
             raise HTTPError(code, "Empty response from server\nCode: %s\nHeaders: %s" % (msg, headers))
 
-        if message_len < 0:
-            # Content-Length missing or invalid; just read the whole socket
-            # This won't work with HTTP/1.1 chunked encoding
-            data = f.read()
-            message_len = len(data)
-        else:
-            data = f.read(message_len)
+        message_len = len(data)
 
-        if(config.debug):
-            print "code=",code
-            print "msg=", msg
-            print "headers=", headers
-            print "content-type=", content_type
-            print "data=", data
-
-        if config.dumpHeadersIn:
-            s = 'Incoming HTTP headers'
-            debugHeader(s)
-            if headers.headers:
-                print "HTTP/1.? %d %s" % (code, msg)
-                print "\n".join(map (lambda x: x.strip(), headers.headers))
-            else:
-                print "HTTP/0.9 %d %s" % (code, msg)
-            debugFooter(s)
-
-        def startswith(string, val):
-            return string[0:len(val)] == val
-
-        if code == 500 and not \
-               ( startswith(content_type, "text/xml") and message_len > 0 ):
+        if code == 500 and not ( startswith(content_type, "text/xml") and message_len > 0 ):
             raise HTTPError(code, msg)
-
-        if config.dumpSOAPIn:
-            s = 'Incoming SOAP'
-            debugHeader(s)
-            print data,
-            if (len(data)>0) and (data[-1] != '\n'):
-                print
-            debugFooter(s)
 
         if code not in (200, 500):
             raise HTTPError(code, msg)
-
 
         # get the new namespace
         if namespace is None:
